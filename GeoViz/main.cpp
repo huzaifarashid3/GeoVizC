@@ -100,11 +100,11 @@ public:
 		{
 			if (run_algo)
 			{
-				//Graham_scan();
+				Graham_scan();
 				//brute_force();
 				closest_pair();
 				cout << closest_lines_display.size() << endl;
-				for (auto l : closest_lines_display)
+				for (auto& l : closest_lines_display)
 					cout << l.p1.xy << ' ' << l.p2.xy << endl;
 				run_algo = false;
 			}	
@@ -131,7 +131,7 @@ public:
 			DrawPoints();
 			DrawLines();
 
-			//DrawHull();
+			DrawHull();
 			DrawClosestPair();
 		}
 	}
