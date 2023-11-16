@@ -103,6 +103,9 @@ public:
 				//Graham_scan();
 				//brute_force();
 				closest_pair();
+				cout << closest_lines_display.size() << endl;
+				for (auto l : closest_lines_display)
+					cout << l.p1.xy << ' ' << l.p2.xy << endl;
 				run_algo = false;
 			}	
 		}
@@ -171,7 +174,7 @@ public:
 	void DrawClosestPair()
 	{
 		for (auto& l : closest_lines_display)
-			DrawLine(closest_line.p1.xy, closest_line.p2.xy);
+			DrawLine(l.p1.xy, l.p2.xy);
 
 		DrawLine(closest_line.p1.xy, closest_line.p2.xy, olc::RED);
 	}
