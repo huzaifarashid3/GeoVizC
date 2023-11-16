@@ -13,6 +13,7 @@ class Game : public olc::PixelGameEngine
 	vector<Point> points;
 	vector<Point> Hull;
 	vector<vector<Point>> hull_display;
+	vector<Line> closest_lines_display;
 	vector<Line> lines;
 	int state;
 	int mx, my;
@@ -24,8 +25,9 @@ class Game : public olc::PixelGameEngine
 	long double gt = 0.0;
 	float delay  = 0.0;
 	int k;
+	int cst_p = 0;
 	float dt = 0;
-	Point c1, c2;
+	Line closest_line;
 	int cd;
 public:
 
@@ -101,9 +103,6 @@ public:
 				//Graham_scan();
 				//brute_force();
 				closest_pair();
-				cout << cd << endl;
-				cout << c1.xy << endl;
-				cout << c2.xy << endl;
 				run_algo = false;
 			}	
 		}
@@ -165,17 +164,26 @@ public:
 			olc::vi2d p1 = h[i].xy, p2 = h[(i + 1) % int(h.size())].xy;
 			DrawLine(p1, p2, olc::DARK_GREEN);
 		}
-		if (gt >= delay)
-		{
-			delay = gt + 0.2;
-			k++;
-		}
+		
+		Delay(0.2, k);
+		
 	}
 	void DrawClosestPair()
 	{
-		DrawLine(c1.xy, c2.xy);
+		for (auto& l : closest_lines_display)
+			DrawLine(closest_line.p1.xy, closest_line.p2.xy);
+
+		DrawLine(closest_line.p1.xy, closest_line.p2.xy, olc::RED);
 	}
 
+	void Delay(float t, int& k)
+	{
+		if (gt >= delay)
+		{
+			delay = gt + t;
+			k++;
+		}
+	}
 
 	void Graham_scan()
 	{
@@ -248,24 +256,24 @@ public:
 		sort(all(points));
 		auto res = recur(points);
 		cd = get<0>(res);
-		c1 = get<1>(res);
-		c2 = get<2>(res);		
+		closest_line = get<1>(res);
+			
 	}
-	 tuple<int, Point, Point> recur(vector<Point>& points)
+	tuple<int, Line> recur(vector<Point>& points)
 	{
 		int n = points.size();
 		if (n <= 1)
-			return { INT32_MAX, Point(), Point() };
+			return { INT32_MAX, Line()};
 		vector<Point> left = vector<Point>(points.begin(), points.begin() + n / 2);
 		vector<Point> right = vector<Point>(points.begin() + n / 2, points.end());
 		auto d1 = recur(left);
 		auto d2 = recur(right);
-		Point p1(get<1>(d1)), p2(get<2>(d1));
+		Line l(get<1>(d1));
 		int d = get<0>(d1);
 		if (get<0>(d2) < get<0>(d1))
 		{
 			d = get<0>(d2);
-			p1 = get<1>(d2), p2 = get<2>(d2);
+			l = get<1>(d2);
 		}
 		int mx = left.back().x;
 		vector<Point> stripe;
@@ -284,17 +292,17 @@ public:
 		{
 			for (int j = i + 1; j < m && sq(stripe[j].y - stripe[i].y) < d; j++)
 			{
+				closest_lines_display.push_back(Line(stripe[i], stripe[j]));
 				int temp = dist(stripe[i], stripe[j]);
 				if (temp < d)
 				{
 					d = temp;
-					p1 = stripe[i];
-					p2 = stripe[j];
+					l = Line(stripe[i], stripe[j]);
 				}
 			}
 			
 		}
-		return {d,p1, p2};
+		return {d,l};
 	}
 
 };
