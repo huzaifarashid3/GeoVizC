@@ -1,18 +1,15 @@
-#define OLC_PGE_APPLICATION
+#include "olcPixelGameEngine.h"
+#include <vector>
 #include <iostream>
 #include <array>
-#include <vector>
-#include "olcPixelGameEngine.h"
 #include "Point.h"
 #include "Line.h"
+#include "Algorithms.h"
 #define all(x) x.begin(), x.end()
 using namespace std;
-
 class Game : public olc::PixelGameEngine
 {
-	vector<Point> points;
-	vector<Point> Hull;
-	vector<vector<Point>> hull_display;
+	Algorithm algo;
 	vector<Line> closest_lines_display;
 	vector<Line> lines;
 	int state;
@@ -23,7 +20,7 @@ class Game : public olc::PixelGameEngine
 	bool partial_line = false;
 	bool run_algo = true;
 	long double gt = 0.0;
-	float delay  = 0.0;
+	float checkpoint  = 0.0;
 	int k;
 	int cst_p = 0;
 	float dt = 0;
@@ -73,7 +70,7 @@ public:
 		{
 			if (GetMouse(0).bPressed)
 			{
-				points.push_back(Point(mouse_loc));
+				algo.points.push_back(Point(mouse_loc));
 			}
 		}
 		if (state == 1)
@@ -100,12 +97,7 @@ public:
 		{
 			if (run_algo)
 			{
-				Graham_scan();
-				//brute_force();
-				closest_pair();
-				cout << closest_lines_display.size() << endl;
-				for (auto& l : closest_lines_display)
-					cout << l.p1.xy << ' ' << l.p2.xy << endl;
+				algo.grahamScan();
 				run_algo = false;
 			}	
 		}
@@ -138,7 +130,7 @@ public:
 
 	void DrawPoints()
 	{
-		for (auto& p : points)
+		for (auto& p : algo.points)
 		{
 			FillCircle(p.xy, 5);
 		}
@@ -160,60 +152,61 @@ public:
 	}
 	void DrawHull()
 	{
-		k = min(k, (int)hull_display.size() - 1);
-		auto& h = hull_display[k];	
+		k = min(k, (int)algo.HullStates.size() - 1);
+		auto& h = algo.HullStates[k];	
 		for (int i = 0; i < (int)h.size(); i++)
 		{
 			olc::vi2d p1 = h[i].xy, p2 = h[(i + 1) % int(h.size())].xy;
 			DrawLine(p1, p2, olc::DARK_GREEN);
 		}
 		
-		Delay(0.2, k);
+		k += Delay(0.2);
 		
 	}
 	void DrawClosestPair()
 	{
-		for (auto& l : closest_lines_display)
-			DrawLine(l.p1.xy, l.p2.xy);
+		/*for (auto& l : closest_lines_display)
+			DrawLine(l.p1.xy, l.p2.xy);*/
 
 		DrawLine(closest_line.p1.xy, closest_line.p2.xy, olc::RED);
 	}
 
-	void Delay(float t, int& k)
+	bool Delay(float t)
 	{
-		if (gt >= delay)
+		if (gt > t + checkpoint)
 		{
-			delay = gt + t;
-			k++;
+			checkpoint = gt;
+			return true;
 		}
+		return false;
 	}
 
 	void Graham_scan()
 	{
-		Hull.clear();
-		sort(all(points));
+		algo.Hull.clear();
+		sort(all(algo.points));
 		for (int i = 0; i < 2; i++)
 		{
-			int s = (int)Hull.size();
-			for (auto& c : points)
+			int s = (int)algo.Hull.size();
+			for (auto& c : algo.points)
 			{
-				while ((int)Hull.size() >= 2 + s)
+				while ((int)algo.Hull.size() >= 2 + s)
 				{
-					Point a = Hull.end()[-1];
-					Point b = Hull.end()[-2];
+					Point a = algo.Hull.end()[-1];
+					Point b = algo.Hull.end()[-2];
 					if (a.cross(b, c) <= 0)
 					{
 						break;
 					}
-					Hull.pop_back();
-					hull_display.push_back(Hull);
+					algo.Hull.pop_back();
+					algo.HullStates.push_back(algo.Hull);
 				}
-				Hull.push_back(c);
-				hull_display.push_back(Hull);
+				algo.Hull.push_back(c);
+				algo.HullStates.push_back(algo.Hull);
 			}
-			Hull.pop_back();
-			hull_display.push_back(Hull);
-			reverse(all(points));
+			algo.Hull.pop_back();
+			algo.HullStates.push_back(algo.Hull);
+			reverse(all(algo.points));
 		}
 	}
 
@@ -221,8 +214,8 @@ public:
 
 	void brute_force()
 	{
-		Hull.clear();
-		int n = points.size();
+		algo.Hull.clear();
+		int n = algo.points.size();
 		for (int i = 0; i < n; i++)
 		{
 			for (int j = 0; j < n; j++)
@@ -232,14 +225,14 @@ public:
 				for (int k = 0; k < n; k++)
 				{
 					if (k == i || k == j) continue;
-					flag &= points[i].cross(points[j], points[k]) > 0;
+					flag &= algo.points[i].cross(algo.points[j], algo.points[k]) > 0;
 
 				}
 				if (flag)
 				{
-					Hull.push_back(points[i]);
-					Hull.push_back(points[j]);
-					hull_display.push_back(Hull);
+					algo.Hull.push_back(algo.points[i]);
+					algo.Hull.push_back(algo.points[j]);
+					algo.HullStates.push_back(algo.Hull);
 				}		
 			}
 		}
@@ -256,8 +249,8 @@ public:
 	}
 	void closest_pair()
 	{
-		sort(all(points));
-		auto res = recur(points);
+		sort(all(algo.points));
+		auto res = recur(algo.points);
 		cd = get<0>(res);
 		closest_line = get<1>(res);
 			
@@ -309,7 +302,6 @@ public:
 	}
 
 };
-
 int main(void)
 {
 	Game game;
@@ -317,5 +309,4 @@ int main(void)
 		game.Start();
 
 	return 0;
-
 }

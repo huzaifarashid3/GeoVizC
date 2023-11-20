@@ -127,14 +127,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Graham_Scan.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="olcPixelGameEngine.cpp" />
     <ClCompile Include="Point.cpp" />
+    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Algorithms.h" />
+    <ClInclude Include="Button.hpp" />
+    <ClInclude Include="ConvexHullScene.hpp" />
     <ClInclude Include="Line.h" />
+    <ClInclude Include="MenuScene.hpp" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Point.h" />
+    <ClInclude Include="Scene.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
